@@ -28,6 +28,7 @@ public class PlayerController : MonoBehaviour {
 
     // UI
     public Text m_GameOverText;
+    public Text m_YouWonText;
 
     void Awake () {
         m_Camera = FindObjectOfType<Camera>();
@@ -101,8 +102,8 @@ public class PlayerController : MonoBehaviour {
         m_Rigidbody.velocity = Vector3.zero;
         m_Rigidbody.gravityScale = 3;
         m_Rigidbody.AddTorque(50);
-        m_GameOverText.enabled = true;
         m_GameOver = true;
+        m_GameOverText.enabled = true;
     }
 
     private IEnumerator HitNothing() {
@@ -111,10 +112,10 @@ public class PlayerController : MonoBehaviour {
         var newPosition = transform.position + (target.position - transform.position).normalized * m_JumpDistance;
         yield return Teleport(newPosition);
         GameOver();
-        // TODO: lose
     }
 
     private IEnumerator HitWall() {
+        m_IsMoving = true;
         yield return Teleport(m_WallHitPoint);
         GameOver();
     }
@@ -125,18 +126,25 @@ public class PlayerController : MonoBehaviour {
         var controller = target.GetComponent<EnergySphereController>();
         controller.DisableCollider();
         var newPosition = target.transform.position;
-        StartCoroutine(MoveToEnergySphere(target.transform.position));
+        StartCoroutine(MoveToEnergySphere(controller));
     }
 
-    private IEnumerator MoveToEnergySphere(Vector3 position) {
-        m_renderer.enabled = false;
-        yield return Teleport(position);
-        m_renderer.enabled = true;
-        m_IsMoving = false;
+    private IEnumerator MoveToEnergySphere(EnergySphereController controller) {
+        yield return Teleport(controller.transform.position);
+        if(controller.m_FinalSphere == true) {
+            YouWon();
+        }
+        else m_IsMoving = false;
+    }
+
+    private void YouWon() {
+        m_YouWonText.enabled = true;
+        m_GameOver = true;
     }
 
     private IEnumerator Teleport(Vector3 position) {
         position.z = 0;
+        m_renderer.enabled = false;
         var transformPosition = (transform.position + position) / 2;
         var stretchSize = (position - transform.position).magnitude;
         transform.position = position;
@@ -145,5 +153,6 @@ public class PlayerController : MonoBehaviour {
         m_TeleportAnimation.transform.localScale = new Vector3(1, stretchSize, 1);
         yield return new WaitForSeconds(0.125f);
         m_TeleportAnimation.SetActive(false);
+        m_renderer.enabled = true;
     }
 }

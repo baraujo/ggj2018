@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class EnergySphereController : MonoBehaviour {
 
+    public bool m_FinalSphere;
     private Collider2D m_Collider;
 
     private void Awake() {
