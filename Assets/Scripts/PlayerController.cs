@@ -43,7 +43,6 @@ public class PlayerController : MonoBehaviour {
     }
 
     void Update() {
-        if (m_IsMoving) return;
         if (m_GameOver) {
             if (Input.GetMouseButtonDown(0)) {
                 SceneManager.LoadScene(0);
@@ -51,15 +50,16 @@ public class PlayerController : MonoBehaviour {
             return;
         }
 
+        if (m_IsMoving) return;
         if (Input.GetMouseButtonUp(0)) {
             if (m_HitEnergySphere) {
                 HitEnergySphere();
             }
             else if (m_HitWall) {
-                HitWall();
+                StartCoroutine(HitWall());
             }
             else {
-                HitNothing();
+                StartCoroutine(HitNothing());
             }
             m_Arrow.m_renderer.color = Color.white;
             m_Arrow.m_arrowObject.SetActive(false);
@@ -105,23 +105,18 @@ public class PlayerController : MonoBehaviour {
         m_GameOver = true;
     }
 
-    private void HitNothing() {
+    private IEnumerator HitNothing() {
         m_IsMoving = true;
         var target = m_FollowTarget;
         var newPosition = transform.position + (target.position - transform.position).normalized * m_JumpDistance;
-        newPosition.z = 0;
-        transform.position = newPosition;
+        yield return Teleport(newPosition);
         GameOver();
-        m_IsMoving = false;
         // TODO: lose
     }
 
-    private void HitWall() {
-        m_IsMoving = true;
-        transform.position = m_WallHitPoint;
+    private IEnumerator HitWall() {
+        yield return Teleport(m_WallHitPoint);
         GameOver();
-        m_IsMoving = false;
-        // TODO: lose
     }
 
     private void HitEnergySphere() {
@@ -135,7 +130,13 @@ public class PlayerController : MonoBehaviour {
 
     private IEnumerator MoveToEnergySphere(Vector3 position) {
         m_renderer.enabled = false;
-        position.z = 0; 
+        yield return Teleport(position);
+        m_renderer.enabled = true;
+        m_IsMoving = false;
+    }
+
+    private IEnumerator Teleport(Vector3 position) {
+        position.z = 0;
         var transformPosition = (transform.position + position) / 2;
         var stretchSize = (position - transform.position).magnitude;
         transform.position = position;
@@ -144,7 +145,5 @@ public class PlayerController : MonoBehaviour {
         m_TeleportAnimation.transform.localScale = new Vector3(1, stretchSize, 1);
         yield return new WaitForSeconds(0.125f);
         m_TeleportAnimation.SetActive(false);
-        m_renderer.enabled = true;
-        m_IsMoving = false;
     }
 }
