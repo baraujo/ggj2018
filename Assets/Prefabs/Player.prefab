@@ -222,14 +222,16 @@ MonoBehaviour:
   m_Arrow: {fileID: 114956535078344458}
   m_FollowTarget: {fileID: 4902877607090456}
   m_VirtualCamera: {fileID: 0}
-  m_HitEnergySphere: 0
-  m_HitWall: 0
-  m_IsMoving: 0
-  m_GameOver: 0
   m_TeleportAnimation: {fileID: 1465323646196444}
   m_renderer: {fileID: 0}
   m_GameOverText: {fileID: 0}
   m_YouWonText: {fileID: 0}
+  m_GameTime: {fileID: 0}
+  m_HitEnergySphere: 0
+  m_HitWall: 0
+  m_IsMoving: 0
+  m_GameOver: 0
+  m_MaxTimeOnSpheres: 2
 --- !u!114 &114956535078344458
 MonoBehaviour:
   m_ObjectHideFlags: 1

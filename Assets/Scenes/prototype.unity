@@ -175,6 +175,12 @@ MonoBehaviour:
     type: 2}
   m_PrefabInternal: {fileID: 1690559973}
   m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
+--- !u!114 &251874977 stripped
+MonoBehaviour:
+  m_PrefabParentObject: {fileID: 114458140810897904, guid: d700b6c71da7aed478514a9141f2f711,
+    type: 2}
+  m_PrefabInternal: {fileID: 1690559973}
+  m_Script: {fileID: 708705254, guid: f70555f144d8491a825f0804e09c671c, type: 3}
 --- !u!1001 &279414116
 Prefab:
   m_ObjectHideFlags: 0
@@ -229,6 +235,11 @@ Prefab:
       propertyPath: m_YouWonText
       value: 
       objectReference: {fileID: 233631950}
+    - target: {fileID: 114317101078397774, guid: 2277baeeb33595b499dd2042a21ab6cf,
+        type: 2}
+      propertyPath: m_GameTime
+      value: 
+      objectReference: {fileID: 251874977}
     m_RemovedComponents: []
   m_ParentPrefab: {fileID: 100100000, guid: 2277baeeb33595b499dd2042a21ab6cf, type: 2}
   m_IsPrefabParent: 0
@@ -313,7 +324,7 @@ Transform:
   m_PrefabInternal: {fileID: 0}
   m_GameObject: {fileID: 378522787}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.0149999, y: 4.6500006, z: -10}
+  m_LocalPosition: {x: -1.2500005, y: 9.900002, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}

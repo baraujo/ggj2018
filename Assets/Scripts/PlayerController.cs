@@ -2,9 +2,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using Debug = UnityEngine.Debug;
 
 public class PlayerController : MonoBehaviour {
 
@@ -15,25 +17,32 @@ public class PlayerController : MonoBehaviour {
     private Rigidbody2D m_Rigidbody;
     private int m_LayerMask;
     private int m_JumpDistance = 18;
+    private Stopwatch m_Stopwatch;
     
-    // Game logic
-    public bool m_HitEnergySphere, m_HitWall;
-    public bool m_IsMoving, m_GameOver;
-    private GameObject m_JumpTarget;
-    private Vector3 m_WallHitPoint;
-
     // Animations
     public GameObject m_TeleportAnimation;
     public SpriteRenderer m_renderer;
 
     // UI
+    [Header("UI")]
     public Text m_GameOverText;
     public Text m_YouWonText;
+    public Text m_GameTime;
+
+    // Game state
+    [Header("Game state")]
+    public bool m_HitEnergySphere;
+    public bool m_HitWall;
+    public bool m_IsMoving, m_GameOver;
+    public float m_MaxTimeOnSpheres;
+    private GameObject m_JumpTarget;
+    private Vector3 m_WallHitPoint;
 
     void Awake () {
         m_Camera = FindObjectOfType<Camera>();
         m_Rigidbody = GetComponent<Rigidbody2D>();
         m_renderer = GetComponent<SpriteRenderer>();
+        m_Stopwatch = new Stopwatch();
 	}
 
     private void Start() {
@@ -41,6 +50,8 @@ public class PlayerController : MonoBehaviour {
         m_LayerMask = 1 << LayerMask.NameToLayer("Walls") | 1 << LayerMask.NameToLayer("EnergySphere");
         m_IsMoving = false;
         m_GameOver = false;
+        m_Stopwatch.Reset();
+        m_Stopwatch.Start();
     }
 
     void Update() {
@@ -50,6 +61,7 @@ public class PlayerController : MonoBehaviour {
             }
             return;
         }
+        m_GameTime.text = string.Format("{0:00}:{1:00}:{2:000}", m_Stopwatch.Elapsed.Minutes, m_Stopwatch.Elapsed.Seconds, m_Stopwatch.Elapsed.Milliseconds);
 
         if (m_IsMoving) return;
         if (Input.GetMouseButtonUp(0)) {
@@ -104,6 +116,7 @@ public class PlayerController : MonoBehaviour {
         m_Rigidbody.AddTorque(50);
         m_GameOver = true;
         m_GameOverText.enabled = true;
+        m_GameOverText.text = "No more energy!\nClick mouse to try again!";
     }
 
     private IEnumerator HitNothing() {
@@ -131,10 +144,35 @@ public class PlayerController : MonoBehaviour {
 
     private IEnumerator MoveToEnergySphere(EnergySphereController controller) {
         yield return Teleport(controller.transform.position);
-        if(controller.m_FinalSphere == true) {
+        if (controller.m_FinalSphere == true) {
             YouWon();
         }
-        else m_IsMoving = false;
+        else {
+            // TODO: start sphere animation
+            m_IsMoving = false;
+            StartCoroutine(EnergySphereFallTimer());
+        }
+    }
+
+    private IEnumerator EnergySphereFallTimer() {
+        float elapsed = 0;
+        bool timeout = false;
+        while (!m_IsMoving && !timeout) {
+            elapsed += Time.deltaTime;
+            if(elapsed > m_MaxTimeOnSpheres) {
+                //TODO: animation for time over
+                Timeout();
+                timeout = true;
+            }
+            yield return null;
+        }
+    }
+
+    private void Timeout() {
+        m_VirtualCamera.Follow = null;
+        m_GameOver = true;
+        m_GameOverText.enabled = true;
+        m_GameOverText.text = "Energy overload!\nClick mouse to try again!";
     }
 
     private void YouWon() {
