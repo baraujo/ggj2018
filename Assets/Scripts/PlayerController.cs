@@ -22,16 +22,21 @@ public class PlayerController : MonoBehaviour {
     private GameObject m_JumpTarget;
     private Vector3 m_WallHitPoint;
 
+    // Animations
+    public GameObject m_TeleportAnimation;
+    public SpriteRenderer m_renderer;
+
     // UI
     public Text m_GameOverText;
 
     void Awake () {
         m_Camera = FindObjectOfType<Camera>();
         m_Rigidbody = GetComponent<Rigidbody2D>();
+        m_renderer = GetComponent<SpriteRenderer>();
 	}
 
     private void Start() {
-        m_Arrow.gameObject.SetActive(false);
+        m_Arrow.m_arrowObject.SetActive(false);
         m_LayerMask = 1 << LayerMask.NameToLayer("Walls") | 1 << LayerMask.NameToLayer("EnergySphere");
         m_IsMoving = false;
         m_GameOver = false;
@@ -57,7 +62,7 @@ public class PlayerController : MonoBehaviour {
                 HitNothing();
             }
             m_Arrow.m_renderer.color = Color.white;
-            m_Arrow.gameObject.SetActive(false);
+            m_Arrow.m_arrowObject.SetActive(false);
         }
         else {
             m_Arrow.transform.rotation = Quaternion.LookRotation(Vector3.forward, m_FollowTarget.position - transform.position);
@@ -65,7 +70,7 @@ public class PlayerController : MonoBehaviour {
             m_HitEnergySphere = false;
 
             if (Input.GetMouseButton(0)) {
-                m_Arrow.gameObject.SetActive(true);
+                m_Arrow.m_arrowObject.SetActive(true);
                 RaycastHit2D hit = Physics2D.Raycast(m_Arrow.transform.position, m_FollowTarget.position - transform.position, m_JumpDistance, m_LayerMask);
                 if (hit.collider != null) {
                     if (hit.collider.CompareTag("Wall")) {
@@ -103,7 +108,6 @@ public class PlayerController : MonoBehaviour {
     private void HitNothing() {
         m_IsMoving = true;
         var target = m_FollowTarget;
-        //StartCoroutine(MoveToNothing(target.position));
         var newPosition = transform.position + (target.position - transform.position).normalized * m_JumpDistance;
         newPosition.z = 0;
         transform.position = newPosition;
@@ -114,12 +118,9 @@ public class PlayerController : MonoBehaviour {
 
     private void HitWall() {
         m_IsMoving = true;
-        // TODO: max distance, don't enter wall
-        //float wallDistance = (transform.position - m_WallHitPoint).magnitude;
         transform.position = m_WallHitPoint;
         GameOver();
         m_IsMoving = false;
-        //StartCoroutine(MoveToWall(target.transform.position));
         // TODO: lose
     }
 
@@ -129,30 +130,21 @@ public class PlayerController : MonoBehaviour {
         var controller = target.GetComponent<EnergySphereController>();
         controller.DisableCollider();
         var newPosition = target.transform.position;
-        newPosition.z = 0;
-        transform.position = newPosition;
-        m_IsMoving = false;
-        //StartCoroutine(MoveToEnergySphere(target.transform.position));
+        StartCoroutine(MoveToEnergySphere(target.transform.position));
     }
 
-    private IEnumerator MovePlayer(Vector3 newPosition) {
-        LeanTween.move(gameObject, newPosition, .5f);
-        yield return new WaitForSeconds(.5f);
-    }
-
-    /*
-    private IEnumerator MoveToNothing(Vector3 newPosition) {
-        yield return MovePlayer(newPosition);
+    private IEnumerator MoveToEnergySphere(Vector3 position) {
+        m_renderer.enabled = false;
+        position.z = 0; 
+        var transformPosition = (transform.position + position) / 2;
+        var stretchSize = (position - transform.position).magnitude;
+        transform.position = position;
+        m_TeleportAnimation.SetActive(true);
+        m_TeleportAnimation.transform.position = transformPosition;
+        m_TeleportAnimation.transform.localScale = new Vector3(1, stretchSize, 1);
+        yield return new WaitForSeconds(0.125f);
+        m_TeleportAnimation.SetActive(false);
+        m_renderer.enabled = true;
         m_IsMoving = false;
     }
-
-    private IEnumerator MoveToWall(Vector3 newPosition) {
-        yield return MovePlayer(newPosition);
-        m_IsMoving = false;
-    }
-
-    private IEnumerator MoveToEnergySphere(Vector3 newPosition) {
-        yield return MovePlayer(newPosition);
-        m_IsMoving = false;
-    }*/
 }
