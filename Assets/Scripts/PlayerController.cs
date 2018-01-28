@@ -13,6 +13,7 @@ public class PlayerController : MonoBehaviour {
     public ArrowController m_Arrow;
     public Transform m_FollowTarget;
     public CinemachineVirtualCamera m_VirtualCamera;
+    public GameObject intro;
     private Camera m_Camera;
     private Rigidbody2D m_Rigidbody;
     private int m_LayerMask;
@@ -34,6 +35,7 @@ public class PlayerController : MonoBehaviour {
     public bool m_HitEnergySphere;
     public bool m_HitWall;
     public bool m_IsMoving, m_GameOver;
+    public bool m_GameStarted;
     public float m_MaxTimeOnSpheres;
     private GameObject m_JumpTarget;
     private Vector3 m_WallHitPoint;
@@ -50,13 +52,27 @@ public class PlayerController : MonoBehaviour {
         m_LayerMask = 1 << LayerMask.NameToLayer("Walls") | 1 << LayerMask.NameToLayer("EnergySphere");
         m_IsMoving = false;
         m_GameOver = false;
+        m_GameStarted = false;
+    }
+
+    public void StartGame() {
+        Destroy(intro);
         m_Stopwatch.Reset();
         m_Stopwatch.Start();
+        StartCoroutine(DelayGameStart());
+    }
+
+    private IEnumerator DelayGameStart() {
+        yield return new WaitForSeconds(0.25f);
+        m_GameStarted = true;
+
     }
 
     void Update() {
+        if (!m_GameStarted) return;
+
         if (m_GameOver) {
-            if (Input.GetMouseButtonDown(0)) {
+            if (Input.GetMouseButtonDown(0) && m_GameStarted) {
                 SceneManager.LoadScene(0);
             }
             return;
@@ -64,7 +80,7 @@ public class PlayerController : MonoBehaviour {
         m_GameTime.text = string.Format("{0:00}:{1:00}:{2:000}", m_Stopwatch.Elapsed.Minutes, m_Stopwatch.Elapsed.Seconds, m_Stopwatch.Elapsed.Milliseconds);
 
         if (m_IsMoving) return;
-        if (Input.GetMouseButtonUp(0)) {
+        if (Input.GetMouseButtonUp(0) && m_GameStarted) {
             if (m_HitEnergySphere) {
                 HitEnergySphere();
             }
@@ -88,21 +104,18 @@ public class PlayerController : MonoBehaviour {
                 if (hit.collider != null) {
                     if (hit.collider.CompareTag("Wall")) {
                         Debug.DrawLine(m_Arrow.transform.position, hit.point, Color.red, m_JumpDistance);
-                        m_Arrow.m_renderer.color = Color.red;
                         m_JumpTarget = hit.collider.gameObject;
                         m_WallHitPoint = hit.point;
                         m_HitWall = true;
                     }
                     else if (hit.collider.CompareTag("EnergySphere")) {
                         Debug.DrawLine(m_Arrow.transform.position, hit.point, Color.blue, m_JumpDistance);
-                        m_Arrow.m_renderer.color = Color.blue;
                         m_JumpTarget = hit.collider.gameObject;
                         m_HitEnergySphere = true;
                     }
                 }
                 else {
                     m_JumpTarget = m_FollowTarget.gameObject;
-                    m_Arrow.m_renderer.color = Color.white;
                 }
             }
         }
@@ -188,7 +201,7 @@ public class PlayerController : MonoBehaviour {
         transform.position = position;
         m_TeleportAnimation.SetActive(true);
         m_TeleportAnimation.transform.position = transformPosition;
-        m_TeleportAnimation.transform.localScale = new Vector3(1, stretchSize, 1);
+        m_TeleportAnimation.transform.localScale = new Vector3(1f, stretchSize, 1f);
         yield return new WaitForSeconds(0.125f);
         m_TeleportAnimation.SetActive(false);
         m_renderer.enabled = true;
