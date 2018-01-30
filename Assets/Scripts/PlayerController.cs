@@ -40,11 +40,22 @@ public class PlayerController : MonoBehaviour {
     private GameObject m_JumpTarget;
     private Vector3 m_WallHitPoint;
 
+    // Audio
+    [Header("Audio")]
+    public AudioClip bgMusic;
+    public AudioClip dashFX;
+    public AudioClip buttonClickFX;
+    public AudioClip winFX;
+    public AudioClip loseFX;
+
+    AudioSource audioSource;
+
     void Awake () {
         m_Camera = FindObjectOfType<Camera>();
         m_Rigidbody = GetComponent<Rigidbody2D>();
         m_renderer = GetComponent<SpriteRenderer>();
         m_Stopwatch = new Stopwatch();
+        audioSource = GetComponent<AudioSource>();
 	}
 
     private void Start() {
@@ -64,8 +75,8 @@ public class PlayerController : MonoBehaviour {
 
     private IEnumerator DelayGameStart() {
         yield return new WaitForSeconds(0.25f);
+        audioSource.PlayOneShot(bgMusic);
         m_GameStarted = true;
-
     }
 
     void Update() {
@@ -98,6 +109,10 @@ public class PlayerController : MonoBehaviour {
             m_HitWall = false;
             m_HitEnergySphere = false;
 
+            if (Input.GetMouseButtonDown(0)) {
+                audioSource.PlayOneShot(buttonClickFX);
+            }
+            
             if (Input.GetMouseButton(0)) {
                 m_Arrow.m_arrowObject.SetActive(true);
                 RaycastHit2D hit = Physics2D.Raycast(m_Arrow.transform.position, m_FollowTarget.position - transform.position, m_JumpDistance, m_LayerMask);
@@ -122,6 +137,7 @@ public class PlayerController : MonoBehaviour {
     }
 
     private void GameOver() {
+        audioSource.PlayOneShot(loseFX, 0.35f);
         m_VirtualCamera.Follow = null;
         m_Rigidbody.bodyType = RigidbodyType2D.Dynamic;
         m_Rigidbody.velocity = Vector3.zero;
@@ -191,9 +207,11 @@ public class PlayerController : MonoBehaviour {
     private void YouWon() {
         m_YouWonText.enabled = true;
         m_GameOver = true;
+        audioSource.PlayOneShot(winFX);
     }
 
     private IEnumerator Teleport(Vector3 position) {
+        audioSource.PlayOneShot(dashFX);
         position.z = 0;
         m_renderer.enabled = false;
         var transformPosition = (transform.position + position) / 2;
